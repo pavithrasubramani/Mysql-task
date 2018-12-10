@@ -48,18 +48,59 @@ CREATE TABLE `transcation` (
   CONSTRAINT `transcation_ibfk_1` FOREIGN KEY (`id`) REFERENCES `customer_details` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Data for the table `transcation` */
+CREATE PROCEDURE details(IN acnt_no INT, 
+IN dte DATE, 
+IN TYPE VARCHAR(30),
+IN amount INT, 
+IN a_acnt_no INT, 
+OUT withdraw BIGINT, 
+OUT deposit BIGINT) 
+BEGIN 
+DECLARE bal INT
+IF(is_available) THEN 
+IF(dis_msg)THEN
+ 
+/*withdraw*/
+IF(TYPE="withdraw") THEN 
+SET bal=bal-amount; 
+UPDATE customer_details SET current_balance=bal WHERE account_no=acnt_no; 
+INSERT INTO transcation (TYPE,amount,date_of_transcation) VALUES ('withdraw',amount,dte);
+END IF;  
 
-/* Function  structure for function  `fn_is_order_placed` */
+/*deposit*/
+ELSE IF(TYPE="deposit")THEN 
+SET bal=bal+amount;
+UPDATE customer_details SET current_balance=bal WHERE account_no=acnt_no; 
+INSERT INTO transcation(TYPE,amount,date_of_transaction) VALUES ('deposit',amount,dte); 
+END IF; 
+END IF;
+END IF;
+END $$ 
+DELIMITER ; 
 
-/*!50003 DROP FUNCTION IF EXISTS `fn_is_order_placed` */;
+
+/*function for availability*/
 DELIMITER $$
-
-/*!50003 CREATE FUNCTION `fn_is_order_placed`(in_order_id INT) RETURNS tinyint(1)
+CREATE FUNCTION is_available(acnt_no INT)
 BEGIN
-RETURN(EXISTS(SELECT order_id FROM order_transaction WHERE order_id=in_order_id));
-END */$$
+RETURN(EXISTS(SELECT account_no FROM customer_details WHERE account_no=acnt_no));
+END $$
 DELIMITER ;
+
+/*function for display message*/
+DELIMITER $$
+CREATE FUNCTION dis_msg(current_balance BIGINT)
+RETURN BOOLEAN
+BEGIN
+DECLARE a TINYINT(1);
+IF (current_balance>=500)
+	SET a = (EXISTS(SELECT current_balance INTO bal FROM customer_details WHERE bal>=500));
+END IF;
+RETURN a;
+END
+DELIMITER ;
+
+CALL dis_msg(100);
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
